@@ -20,7 +20,9 @@ async function getBookRecommendations(csvFilePath) {
 
         // Get highly rated read books (4+ stars)
         const highlyRatedReadBooks = readBooks.filter(book => book.rating >= 4);
-        const topReadBooks = highlyRatedReadBooks.slice(0, 10); // Top 10 highly rated read books
+        const topReadBooks = highlyRatedReadBooks
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 10); // Random 10 highly rated read books
 
         if (topReadBooks.length === 0) {
             throw new Error('No highly rated read books found. Please read and rate some books first.');
@@ -74,6 +76,10 @@ async function getBookRecommendations(csvFilePath) {
     }
 }
 
+function writeBooksToJson(books, outputFile) {
+    fs.writeFileSync(outputFile, JSON.stringify(books, null, 2));
+}
+
 // Usage: node src/index.js <csv-file> <output-file>
 async function main() {
     if (process.argv.length < 4) {
@@ -88,6 +94,8 @@ async function main() {
     try {
         const recommendations = await getBookRecommendations(csvFile);
         fs.writeFileSync(outputFile, recommendations);
+        //const books = await parseGoodreadsCSV(csvFile);
+        //writeBooksToJson(books, outputFile);
         console.log(`Book recommendations saved to ${outputFile}`);
     } catch (error) {
         console.error('Error:', error.message);

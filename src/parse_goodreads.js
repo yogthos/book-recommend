@@ -5,19 +5,20 @@ export function parseGoodreadsCSV(inputFile) {
     return new Promise((resolve, reject) => {
         const books = [];
 
+
         fs.createReadStream(inputFile)
             .pipe(csv())
             .on('data', (row) => {
                 // Extract relevant fields with fallbacks for different CSV formats
                 const book = {
                     title: row['Title'] || row['title'],
-                    author: row['Author'] || row['author'],
-                    isbn: row['ISBN'] || row['isbn'],
+                    author: row['Author'] || row['author'] || row['author_text'],
+                    isbn: row['ISBN'] || row['isbn'] || row['isbn_10'] || row['isbn_13'],
                     rating: parseFloat(row['My Rating'] || row['Rating'] || row['rating']) || 0,
-                    dateRead: row['Date Read'] || row['date_read'],
+                    dateRead: row['Date Read'] || row['date_read'] || row['finish_date'],
                     shelves: row['Bookshelves'] || row['Shelves'] || row['shelves'] || '',
-                    readStatus: row['Exclusive Shelf'] || row['Read Status'] || row['read_status'] || '',
-                    dateAdded: row['Date Added'] || row['date_added']
+                    readStatus: row['Exclusive Shelf'] || row['Read Status'] || row['read_status'] || row['shelf'] || '',
+                    dateAdded: row['Date Added'] || row['date_added'] || row['start_date']
                 };
 
                 // Determine if book is read based on Goodreads CSV structure
