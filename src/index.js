@@ -8,9 +8,9 @@ async function getBookRecommendations(csvFilePath) {
         // Parse the CSV file
         const books = await parseGoodreadsCSV(csvFilePath);
 
-        // Categorize books
+        // Categorize books with randomized unread books
         const readBooks = books.filter(book => book.isRead);
-        const unreadBooks = books.filter(book => !book.isRead);
+        const unreadBooks = books.filter(book => !book.isRead).sort(() => 0.5 - Math.random());
 
         console.log(`Found ${readBooks.length} read books and ${unreadBooks.length} unread books`);
 
