@@ -1,7 +1,7 @@
 import fs from 'fs';
 import csv from 'csv-parser';
 
-export function parseGoodreadsCSV(inputFile) {
+export default function parseGoodreadsCSV(inputFile) {
     return new Promise((resolve, reject) => {
         const books = [];
 

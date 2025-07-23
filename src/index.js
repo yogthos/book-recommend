@@ -1,14 +1,10 @@
 import fs from 'fs';
-import axios from 'axios';
-import { parseGoodreadsCSV } from './parse_goodreads.js';
+import getDeepseekBookRecommendations from './deepseek.js';
+import getOllamaBookRecommendations from './ollama.js';
+import parseGoodreadsCSV from './parse_goodreads.js';
 
 async function getBookRecommendations(csvFilePath) {
     try {
-        // Check if API key is set
-        if (!process.env.DEEPSEEK_API_KEY) {
-            throw new Error('DEEPSEEK_API_KEY environment variable is not set');
-        }
-
         // Parse the CSV file
         const books = await parseGoodreadsCSV(csvFilePath);
 
@@ -43,41 +39,12 @@ async function getBookRecommendations(csvFilePath) {
         ).join('\n');
 
         const content = `Based on my reading history of highly rated books:\n\n${readingHistory}\n\nI have these unread books in my library:\n\n${unreadBooksList}\n\nPlease recommend 5 books from my unread list that I would most likely enjoy based on my reading preferences. For each recommendation, explain why it matches my taste based on my highly rated books.`;
+        return process.env.USE_OLLAMA ? await getOllamaBookRecommendations(content) : await getDeepseekBookRecommendations(content);
 
-        // Call Deepseek API for book recommendations
-        const response = await axios.post(
-            'https://api.deepseek.com/v1/chat/completions',
-            {
-                model: "deepseek-chat",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You're a helpful assistant who can analyze reading preferences and recommend books from a user's existing library. Based on the user's reading history of highly rated books, recommend books from their unread list that they would most likely enjoy. Focus on books that are similar in style, theme, or author to their highest rated books."
-                    },
-                    {
-                        role: "user",
-                        content: content
-                    }
-                ],
-                temperature: 0.3
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-
-        return response.data.choices[0].message.content;
     } catch (error) {
         console.error('Failed to get book recommendations:', error.message);
         throw error;
     }
-}
-
-function writeBooksToJson(books, outputFile) {
-    fs.writeFileSync(outputFile, JSON.stringify(books, null, 2));
 }
 
 // Usage: node src/index.js <csv-file> <output-file>
@@ -94,8 +61,6 @@ async function main() {
     try {
         const recommendations = await getBookRecommendations(csvFile);
         fs.writeFileSync(outputFile, recommendations);
-        //const books = await parseGoodreadsCSV(csvFile);
-        //writeBooksToJson(books, outputFile);
         console.log(`Book recommendations saved to ${outputFile}`);
     } catch (error) {
         console.error('Error:', error.message);
